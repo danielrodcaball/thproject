@@ -10,3 +10,6 @@ class Restaurant(models.Model):
     location_lat = models.FloatField(verbose_name='Location Latitude')
     location_long = models.FloatField(verbose_name='Location Longitude')
 
+    def __str__(self):
+        return self.name
+
