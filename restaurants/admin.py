@@ -12,7 +12,7 @@ class ReservationAdmin(admin.ModelAdmin):
 
 
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location_lat', 'location_long', 'open_time', 'close_time')
+    list_display = ('name', 'location_lat', 'location_long')
 
 
 class TableAdmin(admin.ModelAdmin):
