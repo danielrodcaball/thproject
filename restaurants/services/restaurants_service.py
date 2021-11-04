@@ -1,16 +1,24 @@
 import datetime
-from django.db.models import QuerySet, Q, Subquery, F, Value, DateTimeField, ExpressionWrapper, Count
+from django.db.models import QuerySet, Q, Subquery, F, Value, DateTimeField, ExpressionWrapper, BooleanField
 from django.db.models.functions import Sqrt, Power
 
+from restaurants.api.serializers import FindRestaurantsValidator
 from restaurants.models import Restaurant, Diner, DietType
 from restaurants.models.reservation import Reservation
 
 reservation_hours_span = 2
 
 
-def find_restaurants(diners_ids=None, target_datetime: datetime.datetime = None, or_version=False) -> QuerySet:
+def find_restaurants(diners_ids=None, target_datetime: str = None, or_version=False) -> QuerySet:
+
     if diners_ids is None:
         diners_ids = []
+
+    validator = FindRestaurantsValidator(data={'diners_ids': diners_ids, 'target_datetime': target_datetime})
+    validator.is_valid(raise_exception=True)
+
+    diners_ids = validator.validated_data['diners_ids']
+    target_datetime = validator.validated_data['target_datetime']
 
     query = Q()
 
@@ -77,9 +85,40 @@ def find_restaurants(diners_ids=None, target_datetime: datetime.datetime = None,
             (Q(end_datetime__gte=target_datetime) & Q(end_datetime__lte=end_target_datetime))
         )
 
+        rn0 = target_datetime.time()  # reservation start time
+        rn1 = end_target_datetime.time()  # reservation end time
+        day_end_time = datetime.time(hour=23, minute=59, second=59, microsecond=999999)
+        day_start_time = datetime.time(hour=0, minute=0, second=0, microsecond=0)
+
         restaurants_ids_qs = Restaurant.objects.filter(
+            # Filtering by the restaurants with open hours in the time of the reservation
+            ((
+                     Q(open_time__lt=F('close_time')) &
+                     (Q(open_time__lte=rn0) & Q(close_time__gte=rn0)) &
+                     (Q(open_time__lte=rn1) & Q(close_time__gte=rn1))
+             ) |
+             (
+                     Q(open_time__gt=F('close_time')) &
+                     (
+                             (Q(open_time__lte=rn0) & Q(
+                                 ExpressionWrapper(Value(rn0 <= day_end_time), BooleanField()))) |
+                             (Q(ExpressionWrapper(Value(rn0 >= day_start_time), BooleanField())) & Q(
+                                 close_time__gte=rn0))
+                     ) &
+                     (
+                             (Q(open_time__lte=rn1) & Q(
+                                 ExpressionWrapper(Value(rn1 <= day_end_time), BooleanField()))) |
+                             (Q(ExpressionWrapper(Value(rn1 >= day_start_time), BooleanField())) & Q(
+                                 close_time__gte=rn1))
+                     )
+             )) &
+
+            # Filtering by restaurant with tables capacity for the amount of diners
             Q(table__capacity__gte=len(diners_ids)) &
+
+            # Filtering by restaurants with time availability
             ~Q(table__in=Subquery(overlapping_reservations.values('table_id').distinct()))
+
         ).values('id').distinct()
 
         query &= Q(id__in=Subquery(restaurants_ids_qs))
