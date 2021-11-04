@@ -1,19 +1,14 @@
-from datetime import timezone
+from datetime import timezone, datetime
 from rest_framework import serializers
+from rest_framework.relations import PrimaryKeyRelatedField
 
-from restaurants.models import Diner, Restaurant, DietType
+from restaurants.models import Diner, Restaurant, DietType, Table
+from restaurants.models.reservation import Reservation
 
 
 class FindRestaurantsValidator(serializers.Serializer):
-    diners = serializers.ListField(allow_empty=True)
+    diners = PrimaryKeyRelatedField(allow_empty=True, many=True, queryset=Diner.objects.all())
     target_datetime = serializers.DateTimeField(default_timezone=timezone.utc, allow_null=True)
-
-    def validate_diners(self, value):
-        for diner_id in value:
-            if not Diner.objects.filter(id=diner_id).exists():
-                raise serializers.ValidationError('Diner with id {id} does not exist'.format(id=diner_id))
-
-        return value
 
 
 class DietTypeSerializer(serializers.ModelSerializer):
@@ -28,3 +23,9 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = '__all__'
+
+
+class ReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['id', 'diners', 'table', 'datetime']
