@@ -21,7 +21,7 @@ def get_validation_error_response(validation_error: rest_framework.exceptions.Va
     return Response(response, status=http_status_code)
 
 
-class FindRestaurantsView(APIView):
+class RestaurantsView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -31,7 +31,7 @@ class FindRestaurantsView(APIView):
 
         try:
             restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-                diners_ids=diners_ids,
+                diners=diners_ids,
                 target_datetime=target_datetime_str
             )
         except rest_framework.exceptions.ValidationError as e:

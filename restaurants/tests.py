@@ -149,7 +149,7 @@ class FindRestaurantsTestOR(TestCase):
     def test_find_restaurants_vegetarian_or_gluten(self):
         # looking for: vegetarian OR gluten
         diners = [self.diner_5.id, self.diner_2.id]
-        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners_ids=diners, or_version=True)
+        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners=diners, or_version=True)
         restaurants_ids = restaurants_qs.values_list('id', flat=True)
         self.assertEqual(restaurants_qs.count(), 4)
         self.assertTrue(self.restaurant_1.id in restaurants_ids)
@@ -160,7 +160,7 @@ class FindRestaurantsTestOR(TestCase):
     def test_find_restaurants_vegetarian_or_gluten_and_vegetarian_and_vegan(self):
         # looking for: (vegetarian OR gluten) AND vegetarian AND vegan
         diners = [self.diner_5.id, self.diner_6.id, self.diner_2.id, self.diner_1.id]
-        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners_ids=diners, or_version=True)
+        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners=diners, or_version=True)
         restaurants_ids = restaurants_qs.values_list('id', flat=True)
         self.assertEqual(restaurants_qs.count(), 1)
         self.assertTrue(self.restaurant_1.id in restaurants_ids)
@@ -168,12 +168,12 @@ class FindRestaurantsTestOR(TestCase):
     def test_find_restaurants_vegetarian_or_gluten_and_paleo(self):
         # looking for: (vegetarian OR gluten) AND paleo
         diners = [self.diner_5.id, self.diner_2.id, self.diner_3.id]
-        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners_ids=diners, or_version=True)
+        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners=diners, or_version=True)
         self.assertEqual(restaurants_qs.count(), 0)
 
     def test_find_restaurants_order(self):
         diners = [self.diner_5.id, self.diner_2.id]
-        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners_ids=diners, or_version=True)
+        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners=diners, or_version=True)
         self.assertEqual(restaurants_qs.count(), 4)
         self.assertEqual(restaurants_qs[0].id, self.restaurant_3.id)
         self.assertEqual(restaurants_qs[1].id, self.restaurant_1.id)
@@ -185,7 +185,7 @@ class FindRestaurantsTestOR(TestCase):
 
         # looking for: vegetarian OR gluten with a table for two at 2021-11-01 21:00:00
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 21:00:00',
             or_version=True
         )
@@ -195,7 +195,7 @@ class FindRestaurantsTestOR(TestCase):
         self.assertEqual(restaurants_qs[1].id, self.restaurant_2.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 21:00:30',
             or_version=True
         )
@@ -204,7 +204,7 @@ class FindRestaurantsTestOR(TestCase):
         self.assertEqual(restaurants_qs[0].id, self.restaurant_3.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 20:00:30',
             or_version=True
         )
@@ -214,7 +214,7 @@ class FindRestaurantsTestOR(TestCase):
         self.assertEqual(restaurants_qs[1].id, self.restaurant_2.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 19:00:00',
             or_version=True
         )
@@ -225,7 +225,7 @@ class FindRestaurantsTestOR(TestCase):
         self.assertEqual(restaurants_qs[2].id, self.restaurant_2.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 15:59:00',
             or_version=True
         )
@@ -238,7 +238,7 @@ class FindRestaurantsTestOR(TestCase):
 
         diners = [self.diner_5.id, self.diner_2.id]
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=diners,
+            diners=diners,
             target_datetime='2021-11-03 21:00:00',
             or_version=True
         )
@@ -388,18 +388,18 @@ class FindRestaurantsTestAND(TestCase):
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants()
         self.assertEqual(restaurants_qs.count(), 6)
 
-        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners_ids=[self.diner_2.id])
+        restaurants_qs = restaurants.services.restaurants_service.find_restaurants(diners=[self.diner_2.id])
         self.assertEqual(restaurants_qs.count(), 6)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id])
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id])
         self.assertEqual(restaurants_qs.count(), 3)
         self.assertEqual(restaurants_qs[0].id, self.restaurant_3.id)
         self.assertEqual(restaurants_qs[1].id, self.restaurant_1.id)
         self.assertEqual(restaurants_qs[2].id, self.restaurant_6.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id])
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id])
         self.assertEqual(restaurants_qs.count(), 1)
         self.assertEqual(restaurants_qs[0].id, self.restaurant_6.id)
 
@@ -407,46 +407,46 @@ class FindRestaurantsTestAND(TestCase):
 
         # Occupied
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 14:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 16:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 12:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         # Close
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 13:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 05:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         # Too close to close time
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 04:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 0)
 
         # Open
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 01:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 1)
@@ -454,14 +454,14 @@ class FindRestaurantsTestAND(TestCase):
 
         # Free
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_2.id, self.diner_6.id, self.diner_3.id],
             target_datetime='2021-11-03 16:30:00'
         )
         self.assertEqual(restaurants_qs.count(), 1)
         self.assertEqual(restaurants_qs[0].id, self.restaurant_6.id)
 
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[self.diner_5.id, self.diner_3.id],
+            diners=[self.diner_5.id, self.diner_3.id],
             target_datetime='2021-11-03 14:00:00'
         )
         self.assertEqual(restaurants_qs.count(), 1)
@@ -469,7 +469,7 @@ class FindRestaurantsTestAND(TestCase):
 
         # A custom test
         restaurants_qs = restaurants.services.restaurants_service.find_restaurants(
-            diners_ids=[3],
+            diners=[3],
             target_datetime='2021-11-04 21:59:00'
         )
 

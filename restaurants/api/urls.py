@@ -1,9 +1,9 @@
 from django.urls import path
 
-from restaurants.api.views import FindRestaurantsView
+from restaurants.api.views import RestaurantsView
 
 app_name = 'restaurants'
 
 urlpatterns = [
-    path('restaurants/', FindRestaurantsView.as_view()),
+    path('restaurants/', RestaurantsView.as_view()),
 ]

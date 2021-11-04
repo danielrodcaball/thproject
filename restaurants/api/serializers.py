@@ -5,10 +5,10 @@ from restaurants.models import Diner, Restaurant, DietType
 
 
 class FindRestaurantsValidator(serializers.Serializer):
-    diners_ids = serializers.ListField(allow_empty=True)
+    diners = serializers.ListField(allow_empty=True)
     target_datetime = serializers.DateTimeField(default_timezone=timezone.utc, allow_null=True)
 
-    def validate_diners_ids(self, value):
+    def validate_diners(self, value):
         for diner_id in value:
             if not Diner.objects.filter(id=diner_id).exists():
                 raise serializers.ValidationError('Diner with id {id} does not exist'.format(id=diner_id))

@@ -9,27 +9,27 @@ from restaurants.models.reservation import Reservation
 reservation_hours_span = 2
 
 
-def find_restaurants(diners_ids=None, target_datetime: str = None, or_version=False) -> QuerySet:
+def find_restaurants(diners=None, target_datetime: str = None, or_version=False) -> QuerySet:
 
-    if diners_ids is None:
-        diners_ids = []
+    if diners is None:
+        diners = []
 
-    validator = FindRestaurantsValidator(data={'diners_ids': diners_ids, 'target_datetime': target_datetime})
+    validator = FindRestaurantsValidator(data={'diners': diners, 'target_datetime': target_datetime})
     validator.is_valid(raise_exception=True)
 
-    diners_ids = validator.validated_data['diners_ids']
+    diners = validator.validated_data['diners']
     target_datetime = validator.validated_data['target_datetime']
 
     query = Q()
 
     # filtering by dietary restrictions
-    if diners_ids:
+    if diners:
 
         # if there are no restricted users they can go to any restaurant
         if not or_version:
             # AND VERSION:
 
-            diet_types_ids = list(DietType.objects.filter(diner__in=diners_ids).values_list('id', flat=True).distinct())
+            diet_types_ids = list(DietType.objects.filter(diner__in=diners).values_list('id', flat=True).distinct())
 
             if len(diet_types_ids) > 0:
 
@@ -51,7 +51,7 @@ def find_restaurants(diners_ids=None, target_datetime: str = None, or_version=Fa
 
             # removing diners without dietary restrictions, we only need the restricted ones, the others can go to any
             # restaurant
-            restricted_diners_ids = [diner_id for diner_id in diners_ids if
+            restricted_diners_ids = [diner_id for diner_id in diners if
                                      DietType.objects.filter(diner=diner_id).count() > 0]
 
             if restricted_diners_ids:
@@ -114,7 +114,7 @@ def find_restaurants(diners_ids=None, target_datetime: str = None, or_version=Fa
              )) &
 
             # Filtering by restaurant with tables capacity for the amount of diners
-            Q(table__capacity__gte=len(diners_ids)) &
+            Q(table__capacity__gte=len(diners)) &
 
             # Filtering by restaurants with time availability
             ~Q(table__in=Subquery(overlapping_reservations.values('table_id').distinct()))
@@ -126,11 +126,11 @@ def find_restaurants(diners_ids=None, target_datetime: str = None, or_version=Fa
     restaurants_qs = Restaurant.objects.filter(query)
 
     # if there are diners then sort the restaurants by the total distance from diners to the restaurant
-    if diners_ids:
+    if diners:
 
         total_distance_expr = Value(0)
 
-        for diner_id in diners_ids:
+        for diner_id in diners:
             diner = Diner.objects.get(id=diner_id)
             total_distance_expr += Sqrt(
                 Power(diner.house_location_lat - F('location_lat'), 2) +
