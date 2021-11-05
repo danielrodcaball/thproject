@@ -50,6 +50,7 @@ def create_reservation(diners: list, target_datetime: str, table: int):
     # Validating the restaurant match all diet restriction of all diners
     diners_diet_types_set = set(DietType.objects.filter(diner__in=diners_ids).distinct())
     restaurant_diet_types_set = set(DietType.objects.filter(restaurant=table.restaurant_id).distinct())
+
     # if the diners diet types is not a subset of the restaurant diet types then raise an exception
     if not diners_diet_types_set <= restaurant_diet_types_set:
         raise RestaurantDoesntMatchAllDinersDietRestrictionsError()
@@ -87,17 +88,18 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
     validator.is_valid(raise_exception=True)
 
     diners_ids = diners
-    diners = validator.validated_data['diners']  # Diners objects, we dont need it in this service
+    # diners = validator.validated_data['diners']  # Diners objects, we dont need it in this service
     target_datetime = validator.validated_data['target_datetime']
 
     query = Q()
 
-    # filtering by dietary restrictions
+    # filtering by the restaurants that match the dietary restrictions. In the AND version every returned restaurant
+    # must match all dietary restrictions of every user. In the OR version every restaurant must match at least one
+    # dietary restriction of every user
     if diners_ids:
 
-        # if there are no restricted users they can go to any restaurant
         if not or_version:
-            # AND VERSION:
+            # *************** AND VERSION ***************
 
             diet_types_ids = list(DietType.objects.filter(diner__in=diners_ids).values_list('id', flat=True).distinct())
 
@@ -117,10 +119,10 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
                 query &= Q(id__in=Subquery(restaurants_ids_qs))
 
         else:
-            # OR VERSION:
+            # *************** OR VERSION ***************
 
-            # removing diners without dietary restrictions, we only need the restricted ones, the others can go to any
-            # restaurant
+            # removing diners without dietary restrictions, we only need the restricted ones because the others can
+            # go to any restaurant
             restricted_diners_ids = [diner_id for diner_id in diners_ids if
                                      DietType.objects.filter(diner=diner_id).count() > 0]
 
