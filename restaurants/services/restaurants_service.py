@@ -106,13 +106,15 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
             if len(diet_types_ids) > 0:
 
                 restaurants_ids_qs = Restaurant.objects.filter(
-                    diet_endorsement_types=diet_types_ids.pop()
+                    Q(table__capacity__gte=len(diners_ids)) &
+                    Q(diet_endorsement_types=diet_types_ids.pop())
                 ).values('id').distinct()
 
                 for diet_type_id in diet_types_ids:
                     restaurants_ids_qs = restaurants_ids_qs.intersection(
                         Restaurant.objects.filter(
-                            diet_endorsement_types=diet_type_id
+                            Q(table__capacity__gte=len(diners_ids)) &
+                            Q(diet_endorsement_types=diet_type_id)
                         ).values('id').distinct()
                     )
 
@@ -129,15 +131,15 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
             if restricted_diners_ids:
 
                 restaurants_ids_qs = Restaurant.objects.filter(
-                    diet_endorsement_types__in=Subquery(
-                        DietType.objects.filter(diner=restricted_diners_ids.pop()).values('id')
-                    )
+                    Q(table__capacity__gte=len(diners_ids)) &
+                    Q(diet_endorsement_types__in=Subquery(DietType.objects.filter(diner=restricted_diners_ids.pop()).values('id')))
                 ).values('id').distinct()
 
                 for diner_id in restricted_diners_ids:
                     restaurants_ids_qs = restaurants_ids_qs.intersection(
                         Restaurant.objects.filter(
-                            diet_endorsement_types__in=Subquery(DietType.objects.filter(diner=diner_id).values('id'))
+                            Q(table__capacity__gte=len(diners_ids)) &
+                            Q(diet_endorsement_types__in=Subquery(DietType.objects.filter(diner=diner_id).values('id')))
                         ).values('id').distinct()
                     )
 
@@ -163,6 +165,7 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
         day_start_time = datetime.time(hour=0, minute=0, second=0, microsecond=0)
 
         restaurants_ids_qs = Restaurant.objects.filter(
+
             # Filtering by the restaurants with open hours in the time of the reservation
             ((
                      Q(open_time__lt=F('close_time')) &
@@ -188,7 +191,7 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
             # Filtering by restaurant with tables capacity for the amount of diners
             Q(table__capacity__gte=len(diners_ids)) &
 
-            # Filtering by restaurants with time availability
+            # Filtering by restaurants with available tables
             ~Q(table__in=Subquery(overlapping_reservations.values('table_id').distinct()))
 
         ).values('id').distinct()
