@@ -8,7 +8,7 @@ from restaurants.custom_errors import DinerWithOverlappingReservationError, Rese
 from restaurants.models import Restaurant, Diner, DietType
 from restaurants.models.reservation import Reservation
 
-reservation_hours_span = 2
+_reservation_hours_span = 2
 
 
 def create_reservation(diners: list, target_datetime: str, table: int):
@@ -20,7 +20,7 @@ def create_reservation(diners: list, target_datetime: str, table: int):
     table = validator.validated_data['table']
     target_datetime = validator.validated_data['datetime']
 
-    end_target_datetime = target_datetime + datetime.timedelta(hours=reservation_hours_span)
+    end_target_datetime = target_datetime + datetime.timedelta(hours=_reservation_hours_span)
 
     # Validating that the reservation not for a past datetime
     if target_datetime < datetime.datetime.now(tz=datetime.timezone.utc):
@@ -33,7 +33,7 @@ def create_reservation(diners: list, target_datetime: str, table: int):
     # Validating the table is not occupied on the selected datetime
     overlapping_reservations = Reservation.objects.annotate(
         end_datetime=ExpressionWrapper(
-            F('datetime') + datetime.timedelta(hours=reservation_hours_span),
+            F('datetime') + datetime.timedelta(hours=_reservation_hours_span),
             output_field=DateTimeField()
         )
     ).filter(
@@ -58,7 +58,7 @@ def create_reservation(diners: list, target_datetime: str, table: int):
     for diner in diners:
         overlapping_reservations_qs = Reservation.objects.annotate(
             end_datetime=ExpressionWrapper(
-                F('datetime') + datetime.timedelta(hours=reservation_hours_span),
+                F('datetime') + datetime.timedelta(hours=_reservation_hours_span),
                 output_field=DateTimeField()
             )
         ).filter(
@@ -143,11 +143,11 @@ def find_restaurants(diners=None, target_datetime: str = None, or_version=False)
 
     # filtering by time availability
     if target_datetime:
-        end_target_datetime = target_datetime + datetime.timedelta(hours=reservation_hours_span)
+        end_target_datetime = target_datetime + datetime.timedelta(hours=_reservation_hours_span)
 
         overlapping_reservations = Reservation.objects.annotate(
             end_datetime=ExpressionWrapper(
-                F('datetime') + datetime.timedelta(hours=reservation_hours_span),
+                F('datetime') + datetime.timedelta(hours=_reservation_hours_span),
                 output_field=DateTimeField()
             )
         ).filter(

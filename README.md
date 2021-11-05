@@ -1,10 +1,17 @@
 ## Deploying
 
-    docker-compose up --build
+Run:
 
-The project will be deployed at `http://127.0.0.1:8000/` 
+    docker-compose up --build -d
 
-If you want to populate the db for tests run:
+The project will be deployed at `http://127.0.0.1:8000/`.
+
+You can manage the db from `http://127.0.0.1:8000/admin`, but first you have to create an admin user with the following 
+command:
+
+    docker-compose exec web python manage.py createsuperuser
+
+If you want to populate the db with test data run:
 
     docker-compose exec web python manage.py populatedb
     
