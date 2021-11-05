@@ -23,12 +23,12 @@ Get all restaurants:
 
     GET http://127.0.0.1:8000/api/v1/restaurants/
 
-Get all restaurants that match all dietary restrictions of diners with ids 1 and 2 sorted by total distance from diners 
-to restaurants in ascending order:
+Get all restaurants that match all dietary restrictions of diners sorted by total distance from diners to restaurants 
+in ascending order:
 
     GET http://127.0.0.1:8000/api/v1/restaurants/?diners=<id>&diners=<id>...
     
-Get all restaurants that match all dietary restrictions of diners and with an available table for the selected time,
+Get all restaurants that match all dietary restrictions of diners and have an available table for the selected datetime,
 sorted by total distance from diners to restaurants in ascending order:
 
     GET http://127.0.0.1:8000/api/v1/restaurants/?diners=<id>&diners=<id>...&target_datetime=<datetime>
