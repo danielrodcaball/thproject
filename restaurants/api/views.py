@@ -1,5 +1,5 @@
-from rest_framework import mixins
-from rest_framework.generics import GenericAPIView
+from rest_framework import status
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from restaurants import custom_errors
 from restaurants.api.serializers import RestaurantSerializer, ReservationSerializer
+from restaurants.models.reservation import Reservation
 
 
 def get_validation_error_response(validation_error: rest_framework.exceptions.ValidationError, http_status_code: int):
@@ -58,6 +59,10 @@ class RestaurantsView(APIView):
         serializer = RestaurantSerializer(restaurants_qs, many=True)
         return Response(serializer.data)
 
+
+class ReservationsView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
 
         diners_ids = request.data.get('diners')
@@ -85,3 +90,8 @@ class RestaurantsView(APIView):
 
         reservation_serializer = ReservationSerializer(new_reservation)
         return Response(reservation_serializer.data, status=200)
+
+    def delete(self, request, pk):
+        reservation = get_object_or_404(Reservation, pk=pk)
+        reservation.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
